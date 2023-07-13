@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:github="http://www.mulesoft.org/schema/mule/github"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:github-connector="http://www.mulesoft.org/schema/mule/github-connector"
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/github-connector http://www.mulesoft.org/schema/mule/github-connector/current/mule-github-connector.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/github http://www.mulesoft.org/schema/mule/github/current/mule-github.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config
+		name="apiHTTPListenerConfig"
+		doc:name="HTTP Listener config"
+		doc:id="e3416a3e-56e1-4598-9df8-5319128246a7">
+		<http:listener-connection
+			host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<import
+		doc:name="Import"
+		doc:id="2ab2a28c-b28c-4e16-8425-bb0ab7c82c21"
+		file="health-library.xml" />
+	<http:request-config
+		name="githubConfiguration"
+		doc:name="HTTP Request configuration"
+		doc:id="92cadc7f-0e0a-4ee5-9fdf-e17c76ded1e6">
+		<http:request-connection
+			protocol="HTTPS"
+			host="github.com/">
+			<http:authentication>
+				<http:basic-authentication
+					username="#[vars.username]"
+					password="#[vars.password]" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<github-connector:config name="Github_connector_Config" doc:name="Github connector Config" doc:id="7ec04676-91ab-48f2-84e6-3cf7160d65bc" username="naveent6314" password="Nav@335353" />
+	<github:config name="Github_connector_Config" doc:name="Github connector Config" doc:id="de6030c2-5e92-46c0-b04a-ae0b0a9b6b14" username="naveent6314" password="Nav@335353" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c5bb0c37-1ace-45b1-846f-4c1566bb44a2" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="6f474950-3730-48d6-92f1-f8c723e8383b" maxEntries="50" entryTtl="60" expirationInterval="5" />
+	<flow name="testFlow2" doc:id="c2e20c81-451d-4481-a822-0f5b74b3fe8c" initialState="started">
+		<set-variable value="1" doc:name="Set Variable" doc:id="8522a00d-35d0-42b7-9035-e9f6596273fb" variableName="counter"/>
+		<http:request method="GET" doc:name="Request" doc:id="ef6911be-0ef2-42d1-8bcf-53169f06c12c" url="https://reqres.in/api/users?page=2"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a51c3c8a-c54b-47f4-81d9-3bd3739e5869" message="#[vars.counter]"/>
+	</flow>
+	<flow name="testFlow4" doc:id="667c96fa-d2ab-4714-b972-fe6196f6000f" >
+		<http:listener doc:name="Listener" doc:id="0d5cc6ac-e2a7-4287-891f-7432515e125f" config-ref="HTTP_Listener_config" path="/test"/>
+		<os:store doc:name="Store" doc:id="77e0aefc-847b-46e2-adfb-78505fc5bbb6" key="load"/>
+		<os:retrieve doc:name="Retrieve" doc:id="97c460fb-77cc-4bd8-83f3-a50ab1d0d2bc" key="load">
+			<os:default-value ><![CDATA[Nothing]]></os:default-value>
+		</os:retrieve>
+		<ee:transform doc:name="Transform Message" doc:id="b9496ec7-16b3-4be5-a4ea-4233518643be" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="testFlow1" doc:id="4c19d2fa-e8b5-4f32-a039-1d6c080c5741" initialState="stopped">
+		<ee:cache doc:name="Cache" doc:id="2dea0dce-00b7-4a64-bf1d-b89196c6e034" />
+		<ee:invalidate-key doc:name="Invalidate Key" doc:id="e6b8c210-aeae-4ba9-9aa0-58be38feefcf" cachingStrategy-ref="Github_connector_Config"/>
+	</flow>
+	<flow name="testFlow3" doc:id="184da3ab-2d54-45cf-9593-fbf55075b839" initialState="stopped">
+		<os:store doc:name="Store" doc:id="2f14cf50-6e7b-4927-b6a7-58ebc8e968e0" />
+	</flow>
+	<flow name="testFlow" doc:id="953ac44c-1c02-44d1-bb41-222ec30dc671" initialState="stopped">
+		<http:listener doc:name="Listener" doc:id="cfcd86a8-dd07-4197-a0f0-2c98969bc95f" config-ref="apiHTTPListenerConfig" path="/api" />
+		<github:get-user doc:name="Get user" doc:id="d660d205-9abf-4de3-bb43-3e6345b0095e" config-ref="Github_connector_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="4053e625-200c-4de4-af98-395a292116d4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
